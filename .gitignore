@@ -1,0 +1,7 @@
+.vs/*
+__pycache__/*
+build/*
+dist/*
+test/*
+*.cache
+*.spec
