@@ -72,7 +72,10 @@ def exif_str_encode(input):
     return tuple(output)
 
 def is_marked(file):
-    exif = piexif.load(file)
+    try:
+        exif = piexif.load(file)
+    except piexif._exceptions.InvalidImageDataError:
+        return False
 
     if piexif.ImageIFD.XPComment not in exif["0th"]:
         return False
@@ -80,7 +83,10 @@ def is_marked(file):
     return exif_str_decode(exif["0th"][piexif.ImageIFD.XPComment]).split('|')[0] == 'yiffdex'
 
 def set_metadata(file, keywords = '', authors = '', comment = ''):
-    exif = piexif.load(file)
+    try:
+        exif = piexif.load(file)
+    except piexif._exceptions.InvalidImageDataError:
+        return
 
     exif["0th"][piexif.ImageIFD.XPKeywords] = exif_str_encode(keywords)
     exif["0th"][piexif.ImageIFD.XPAuthor] = exif_str_encode(authors)
@@ -287,11 +293,13 @@ class Yiffdex(threading.Thread):
             if self.force is False and f in self.cache.data:
                 print("CACHED.")
                 self.progress_counter += 1
+                self.call_scan_callback(f, self.cache.data[f] == '1')
                 continue
 
             if self.force is False and is_marked(f):
                 print("PASS.")
                 self.progress_counter += 1
+                self.call_scan_callback(f, True)
                 continue
 
             # Try to retrieve image information
@@ -332,13 +340,16 @@ class Yiffdex(threading.Thread):
             self.progress_counter += 1
 
             # Scan callback
-            for c in self.scan_callback:
-                c((f, file_info is not None))
+            self.call_scan_callback(f, file_info is not None)
 
             time.sleep(self.interval)
 
     def get_percent_progress(self):
         return self.progress_counter / len(self.files) * 100.0
+
+    def call_scan_callback(self, filename, status):
+        for c in self.scan_callback:
+            c((filename, status))
 
 # Main ------------------------------------------
 
@@ -411,7 +422,7 @@ if __name__ == "__main__":
         yiffdex_app.start()
         yiffdex_app.join()
 
-        if yiffdex_app.inkbunny_api is not None:
+        if yiffdex_app.inkbunny is not None:
             yiffdex_app.inkbunny.logout()
     else:
         yiffdex_gui = gui.YiffdexFrame()

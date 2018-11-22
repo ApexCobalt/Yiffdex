@@ -47,6 +47,15 @@ optional arguments:
 
 ### Changelog
 
+**version 1.0.1**
+* Multiple GUI change
+* Force to have almost one folder/file to run yiffdex
+
+* Fix crash when trying to open non JPEG file with .jpg extension (see #1)
+* Fix error when application logout of inkbunny in console mod (see #1)
+* Fix bug that add an empty line in list if you cancel the "Add folder"
+* Fix bug where progress don't show correctly when picture is cached or marked
+
 **version 1.0b**
 * Add GUI
 

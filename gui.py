@@ -40,10 +40,8 @@ class YiffdexFrame(Tk):
         self.yiffdex = None
 
         # Main window settings
-        self.title("Yiffdex - 1.0b")
+        self.title("Yiffdex - 1.0.1")
         self.resizable(False, False)
-        self.maxsize(width=640, height=600)
-        self.minsize(width=640, height=600)
 
         # Variables
         self.filelist = StringVar()
@@ -51,6 +49,7 @@ class YiffdexFrame(Tk):
         self.enable_e621 = IntVar(value=1)
         self.enable_inkbunny = IntVar(value=1)
         self.enable_cache = IntVar(value=1)
+        self.fetch_interval = 1
 
         self.e621_username = StringVar(value="guest")
         self.inkbunny_username = StringVar(value="guest")
@@ -69,73 +68,87 @@ class YiffdexFrame(Tk):
     def build(self):
         # File / folder list
         list_label_frame = LabelFrame(self, text="File(s) or folder(s) to scan")
-        list_label_frame.place(x=5, y=5)
+        list_label_frame.pack(padx=10, pady=10)
         
-        self.list_listbox = Listbox(list_label_frame, listvariable=self.filelist, width=70, height=15)
+        self.list_listbox = Listbox(list_label_frame, listvariable=self.filelist, width=80, height=15)
         self.list_listbox.pack(padx=5, pady=5)
 
         # List controls
-        self.btn_add_folder = Button(self, text="Add folder", width=15, command=self.action_add_folder)
-        self.btn_add_folder.place(x=460, y=10)
+        btn_listbox_frame = Frame(self)
+        btn_listbox_frame.pack()
 
-        self.btn_add_file = Button(self, text="Add file", width=15, command=self.action_add_file)
-        self.btn_add_file.place(x=460, y=40)
+        self.btn_add_folder = Button(btn_listbox_frame, text="Add folder", width=15, command=self.action_add_folder)
+        self.btn_add_folder.pack(padx=5, side=LEFT)
 
-        self.btn_remove_item = Button(self, text="Remove selected", width=15, command=self.action_remove_item)
-        self.btn_remove_item.place(x=460, y=100)
+        self.btn_add_file = Button(btn_listbox_frame, text="Add file(s)", width=15, command=self.action_add_file)
+        self.btn_add_file.pack(padx=5, side=LEFT)
+
+        self.btn_remove_item = Button(btn_listbox_frame, text="Remove selected", width=15, command=self.action_remove_item)
+        self.btn_remove_item.pack(padx=5, side=LEFT)
+
+        # Settings
+        settings_frame = Frame(self)
+        settings_frame.pack(padx=10, pady=20)
 
         # e621 settings
-        option_e621_labelframe = LabelFrame(self, text="e621 settings")
-        option_e621_labelframe.place(x=5, y=290)
+        e621_settings_frame = LabelFrame(settings_frame, text="e621 settings")
+        e621_settings_frame.pack(anchor=W, pady=2, fill=X)
 
-        check_e621 = Checkbutton(option_e621_labelframe, text="e621 search", variable=self.enable_e621, command=self.action_check_e621_change)
-        check_e621.grid(row=0, column=0, padx=5, pady=5)
+        check_e621 = Checkbutton(e621_settings_frame, text="e621 search", variable=self.enable_e621, command=self.action_check_e621_change)
+        check_e621.grid(row=0, column=0, padx=5)
 
-        label_e621_username = Label(option_e621_labelframe, text="Username :").grid(row=1, column=0)
-        self.input_e621_username = Entry(option_e621_labelframe, textvariable=self.e621_username)
-        self.input_e621_username.grid(row=1, column=1, padx=5, pady=5)
+        label_e621_username = Label(e621_settings_frame, text="Username :").grid(row=0, column=1)
+        self.input_e621_username = Entry(e621_settings_frame, textvariable=self.e621_username)
+        self.input_e621_username.grid(row=0, column=2, padx=5, pady=5)
 
         # Inkbunny settings
-        option_inkbunny_labelframe = LabelFrame(self, text="Inkbunny settings")
-        option_inkbunny_labelframe.place(x=250, y=290)
+        inkbunny_settings_frame = LabelFrame(settings_frame, text="Inkbunny settings")
+        inkbunny_settings_frame.pack(anchor=W, pady=2, fill=X)
 
-        check_inkbunny = Checkbutton(option_inkbunny_labelframe, text="Inkbunny search", variable=self.enable_inkbunny, command=self.action_check_inkbunny_change)
+        check_inkbunny = Checkbutton(inkbunny_settings_frame, text="Inkbunny search", variable=self.enable_inkbunny, command=self.action_check_inkbunny_change)
         check_inkbunny.grid(row=0, column=0, padx=5, pady=5)
 
-        label_inkbunny_username = Label(option_inkbunny_labelframe, text="Username :").grid(row=1, column=0)
-        self.input_inkbunny_username = Entry(option_inkbunny_labelframe, textvariable=self.inkbunny_username)
-        self.input_inkbunny_username.grid(row=1, column=1, padx=5, pady=5)
+        label_inkbunny_username = Label(inkbunny_settings_frame, text="Username :").grid(row=0, column=1)
+        self.input_inkbunny_username = Entry(inkbunny_settings_frame, textvariable=self.inkbunny_username)
+        self.input_inkbunny_username.grid(row=0, column=2, padx=5, pady=5)
 
-        label_inkbunny_password = Label(option_inkbunny_labelframe, text="Password :").grid(row=2, column=0)
-        self.input_inkbunny_password = Entry(option_inkbunny_labelframe, textvariable=self.inkbunny_password, show='*')
-        self.input_inkbunny_password.grid(row=2, column=1, padx=5, pady=5)
+        label_inkbunny_password = Label(inkbunny_settings_frame, text="Password :").grid(row=0, column=3)
+        self.input_inkbunny_password = Entry(inkbunny_settings_frame, textvariable=self.inkbunny_password, show='*')
+        self.input_inkbunny_password.grid(row=0, column=4, padx=5, pady=5)
 
         # Misc. settings
-        option_labelframe = LabelFrame(self, text="Misc.")
-        option_labelframe.place(x=520, y=290)
+        option_labelframe = LabelFrame(settings_frame, text="Misc. settings")
+        option_labelframe.pack(anchor=W, pady=2, fill=X)
 
-        check_cache = Checkbutton(option_labelframe, text="Cache", variable=self.enable_cache)
-        check_cache.grid(row=0, column=0, padx=20, pady=5)
+        check_cache = Checkbutton(option_labelframe, text="Enable cache", variable=self.enable_cache)
+        check_cache.grid(row=0, column=0, padx=5, pady=5)
 
         # Run controls
-        self.btn_launch = Button(self, text="Run Yiffdex", command=self.action_launch, width=65, height=3)
-        self.btn_launch.place(x=5, y=430)
+        control_frame = Frame(self)
+        control_frame.pack(padx=10)
 
-        self.btn_stop = Button(self, text="Stop", command=self.action_stop, width=20, state=DISABLED, height=3)
-        self.btn_stop.place(x=480, y=430)
+        self.btn_launch = Button(control_frame, text="Run Yiffdex", command=self.action_launch, width=50, height=3)
+        self.btn_launch.pack(padx=5, pady=5, side=LEFT)
+
+        self.btn_stop = Button(control_frame, text="Abort", command=self.action_stop, width=18, state=DISABLED, height=3)
+        self.btn_stop.pack(padx=5, pady=5, side=LEFT)
 
         # Progress layout
         progress_labelframe = LabelFrame(self, text="Progress")
-        progress_labelframe.place(x=5, y=500)
+        progress_labelframe.pack(pady=10, padx=10, fill=X)
 
-        self.progress_label = Label(progress_labelframe, text="", anchor="w")
-        self.progress_label.grid(row=0, column=0, padx=5, pady=3)
+        self.progress_label = Label(progress_labelframe, text="")
+        self.progress_label.pack(padx=5, anchor=W)
 
-        progress_bar = Progressbar(progress_labelframe, orient="horizontal", length=610, variable=self.progress)
-        progress_bar.grid(row=1, column=0, padx=5, pady=5)
+        self.progress_percent = Label(progress_labelframe, text="0%")
+        self.progress_percent.pack(padx=5, anchor=E)
+
+        progress_bar = Progressbar(progress_labelframe, orient="horizontal", variable=self.progress)
+        progress_bar.pack(fill=X, padx=5, pady=5)
 
         # Copyright
-        author_label = Label(self, text="developed by Noryx").place(x=520, y=580)
+        author_label = Label(self, text="by Noryx")
+        author_label.pack(side=RIGHT, padx=10)
         
     def action_add_file(self, event = None):
         file_tmp = askopenfilenames(title="Select images files", filetypes=[('jpeg files', '.jpg'), ('all files', '*')])
@@ -144,8 +157,9 @@ class YiffdexFrame(Tk):
 
     def action_add_folder(self, event = None):
         folder_tmp = askdirectory()
-        self.files.append(folder_tmp)
-        self.refresh_list()
+        if folder_tmp != '':
+            self.files.append(folder_tmp)
+            self.refresh_list()
 
     def action_remove_item(self, event = None):
         items = self.list_listbox.curselection()
@@ -168,9 +182,14 @@ class YiffdexFrame(Tk):
             self.input_inkbunny_password['state'] = 'disabled'
 
     def action_launch(self, event = None):
+        if len(self.files) == 0:
+            showerror(title="Yiffdex", message="No files or folders selected.")
+            return
+
         self.disable_run()
 
         # Initialize caching
+        self.progress_label['text'] = 'Initializing cache ...'
         cache = YiffdexCache('yiffdex.cache')
         cache.load()
 
@@ -178,6 +197,8 @@ class YiffdexFrame(Tk):
         self.yiffdex = Yiffdex(cache=cache)
 
         # Get list of all files that will be tagged
+        self.progress_label['text'] = 'Scanning folders ...'
+
         self.yiffdex.files = []
         for f in self.files:
             if os.path.isfile(f):
@@ -191,16 +212,16 @@ class YiffdexFrame(Tk):
 
         # Inkbunny API Initialization
         inkbunny_api = None
-
         if self.enable_inkbunny.get() == 1:
+            self.progress_label['text'] = 'Initializing Inkbunny module ...'
             inkbunny_api = YiffdexInkbunnyAPI()
             login_result = inkbunny_api.login(self.inkbunny_username.get(), self.inkbunny_password.get())
             
             if login_result is False:
                 showerror("Yiffdex", "Can't connect to Inkbunny with the specified credentials.")
+                self.progress_label['text'] = 'Aborted.'
                 self.enable_run()
                 return
-
         self.yiffdex.inkbunny = inkbunny_api
 
         # Set additionals params
@@ -229,15 +250,17 @@ class YiffdexFrame(Tk):
             i = i + 1
 
     def event_onprescan(self, file):
-        if len(file) > 100:
-            file = file[:45] + '...' + file[-45:]
+        if len(file) > 70:
+            file = file[:30] + '...' + file[-30:]
         self.progress_label['text'] = file + ' ...'
 
     def event_onscan(self, event):
-        self.progress.set(self.yiffdex.get_percent_progress())
+        percent = self.yiffdex.get_percent_progress()
+        self.progress.set(percent)
+        self.progress_percent['text'] = str(int(percent)) + '%'
 
-        # If done
-        if self.progress.get() >= 100.0:
+        # When all is done
+        if percent >= 100.0:
             self.progress_label['text'] = 'Done.'
             if self.yiffdex.inkbunny is not None:
                 self.yiffdex.inkbunny.logout()
@@ -246,7 +269,10 @@ class YiffdexFrame(Tk):
     def event_onclose(self):
         if self.yiffdex is not None and self.yiffdex.isAlive() is True:
             self.yiffdex.stop = True
-            self.yiffdex.join(timeout=5)
+            try:
+                self.yiffdex.join(timeout=5)
+            except RuntimeError:
+                pass
         self.destroy()
 
     def disable_run(self):
