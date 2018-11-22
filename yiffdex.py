@@ -70,7 +70,8 @@ def exif_str_decode(input):
 def exif_str_encode(input):
     output = []
     for _ in input:
-        output.append(ord(_))
+        car = ord(_)
+        output.append(car if car <= 255 else 32)
         output.append(0)
     return tuple(output)
 
