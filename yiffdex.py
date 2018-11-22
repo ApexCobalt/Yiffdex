@@ -49,7 +49,10 @@ def get_name_hash(input):
     return m.group(1) if m is not None else ''
 
 def get_meta_hash(file):
-    exif = piexif.load(file)
+    try:
+        exif = piexif.load(file)
+    except piexif._exceptions.InvalidImageDataError:
+        return ''
 
     if piexif.ImageIFD.XPComment not in exif["0th"]:
         return ''
